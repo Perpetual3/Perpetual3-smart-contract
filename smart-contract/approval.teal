@@ -1,0 +1,222 @@
+#pragma version 6
+txn ApplicationID
+int 0
+==
+bnz main_l22
+txn OnCompletion
+int CloseOut
+==
+bnz main_l21
+txn OnCompletion
+int UpdateApplication
+==
+bnz main_l20
+txn OnCompletion
+int DeleteApplication
+==
+bnz main_l19
+txn OnCompletion
+int ClearState
+==
+bnz main_l18
+txn OnCompletion
+int OptIn
+==
+bnz main_l17
+txn OnCompletion
+int 0
+==
+bnz main_l8
+int 0
+return
+main_l8:
+txna ApplicationArgs 0
+byte "ptr"
+==
+bnz main_l16
+txna ApplicationArgs 0
+byte "perpetualClaim"
+==
+bnz main_l15
+txna ApplicationArgs 0
+byte "changefee"
+==
+bnz main_l14
+txna ApplicationArgs 0
+byte "safewithdraw"
+==
+bnz main_l13
+int 1
+return
+main_l13:
+callsub safeWithdraw_0
+int 1
+return
+main_l14:
+callsub changeFee_1
+int 1
+return
+main_l15:
+txn CloseRemainderTo
+global ZeroAddress
+==
+assert
+txn RekeyTo
+global ZeroAddress
+==
+assert
+callsub claimPerpetual_2
+int 1
+return
+main_l16:
+txn CloseRemainderTo
+global ZeroAddress
+==
+assert
+txn RekeyTo
+global ZeroAddress
+==
+assert
+callsub perpetualGenesis_3
+int 1
+return
+main_l17:
+int 1
+return
+main_l18:
+int 0
+return
+main_l19:
+int 0
+return
+main_l20:
+int 0
+return
+main_l21:
+int 0
+return
+main_l22:
+txn TypeEnum
+int appl
+==
+assert
+txn NumAppArgs
+int 0
+==
+assert
+int 1
+return
+
+// safeWithdraw
+safeWithdraw_0:
+global CurrentApplicationAddress
+balance
+txna ApplicationArgs 1
+btoi
+-
+global CurrentApplicationAddress
+min_balance
+int 1000000
++
+>=
+assert
+txn Sender
+global CreatorAddress
+==
+assert
+itxn_begin
+int pay
+itxn_field TypeEnum
+global CurrentApplicationAddress
+itxn_field Sender
+global CreatorAddress
+itxn_field Receiver
+txna ApplicationArgs 1
+btoi
+itxn_field Amount
+itxn_submit
+retsub
+
+// changeFee
+changeFee_1:
+txna ApplicationArgs 1
+btoi
+int 5000000
+<=
+assert
+txn Sender
+global CreatorAddress
+==
+assert
+byte "Perpetual Fee"
+txna ApplicationArgs 1
+btoi
+app_global_put
+retsub
+
+// claimPerpetual
+claimPerpetual_2:
+txna Assets 0
+asset_params_get AssetReserve
+store 1
+store 0
+load 1
+assert
+load 0
+txn Sender
+==
+assert
+itxn_begin
+int axfer
+itxn_field TypeEnum
+txna Assets 0
+itxn_field XferAsset
+int 1
+itxn_field AssetAmount
+global CurrentApplicationAddress
+itxn_field AssetSender
+txn Sender
+itxn_field AssetReceiver
+itxn_submit
+retsub
+
+// perpetualGenesis
+perpetualGenesis_3:
+global CurrentApplicationID
+byte "Perpetual Fee"
+app_global_get_ex
+store 3
+store 2
+gtxn 1 Receiver
+global CurrentApplicationAddress
+==
+assert
+load 3
+assert
+gtxn 1 Amount
+load 2
+==
+assert
+itxn_begin
+int acfg
+itxn_field TypeEnum
+int 0
+itxn_field ConfigAssetDefaultFrozen
+int 0
+itxn_field ConfigAssetDecimals
+txna ApplicationArgs 2
+itxn_field ConfigAssetUnitName
+txna ApplicationArgs 1
+itxn_field ConfigAssetName
+txn Sender
+itxn_field ConfigAssetReserve
+global CurrentApplicationAddress
+itxn_field ConfigAssetClawback
+int 1
+itxn_field ConfigAssetTotal
+byte ""
+itxn_field ConfigAssetURL
+txna ApplicationArgs 3
+itxn_field ConfigAssetMetadataHash
+itxn_submit
+retsub
