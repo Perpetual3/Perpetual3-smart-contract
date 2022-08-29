@@ -1,7 +1,3 @@
-# Perpetual3 Documentations
+# Perpetual3 Smart Contract
 
-Learn the technology behind Perpetual3.
-
-Please note that this is a beta version of the documentation.
-
-https://perpetualweb3.gitbook.io
+![pub.dev]Full high level documentations https://perpetualweb3.gitbook.io
