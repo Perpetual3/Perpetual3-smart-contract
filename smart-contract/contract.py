@@ -1,26 +1,28 @@
 from pyteal import *
 
-
+#defined constants for app call 
 class Constants:
     genesisA = Bytes("ptr")
     claimA = Bytes("perpetualClaim")
     changeFeeA = Bytes("changefee")
     safewithdraA = Bytes("safewithdraw")
 
-
+#safely withdraw funds from contract to creator address without creating denial of service
 @ Subroutine(TealType.none)
 def safeWithdraw():
-
+    #get amount requested in app args
     amount = Btoi(Txn.application_args[1])
+    #get app balance
     appBalance = Balance(Global.current_application_address())
+    #get min balance + add 1 algo for more security
     safeminappBalance = MinBalance(
         Global.current_application_address())+Int(1000000)
 
     return Seq(
-
+        #Check appBalance-amount is more or equal to min balance + 1 algo
         Assert((appBalance-amount) >= safeminappBalance),
         Assert(Txn.sender() == Global.creator_address()),
-
+        #Transfer requested amount from app to creator
         InnerTxnBuilder.Begin(),
 
         InnerTxnBuilder.SetFields({
@@ -35,10 +37,13 @@ def safeWithdraw():
 
 @ Subroutine(TealType.none)
 def changeFee():
+    #Get requested new fee from creator
     newFee = Btoi(Txn.application_args[1])
 
     return Seq(
+        #Check that the fee doesn't exceed 5 algos
         Assert(newFee <= Int(5000000)),
+        #Check the sender is the creator
         Assert(Txn.sender() == Global.creator_address()),
         App.globalPut(Bytes("Perpetual Fee"), newFee)
     )
@@ -46,9 +51,9 @@ def changeFee():
 
 @ Subroutine(TealType.none)
 def claimPerpetual():
-
+    #get asset id from foreign assets
     perpetualID = Txn.assets[0]
-
+    #get the reserve account which is set at the creation of PerpetualID as the PerpetualID owner
     ownershipCheck = AssetParam.reserve(perpetualID)
 
     return Seq(
@@ -74,12 +79,16 @@ def claimPerpetual():
 
 @ Subroutine(TealType.none)
 def perpetualGenesis():
-
+    
+    #get current active platform fee
     perpetualFee = App.globalGetEx(
         App.id(), Bytes("Perpetual Fee"))
-
+    
+    #get perpetual File metadata
     fullname = Txn.application_args[1]
+    #learn more on unitname on documentations
     unitname = Txn.application_args[2]
+    #get sha256 hash of file
     integrity = Txn.application_args[3]
 
     return Seq(
