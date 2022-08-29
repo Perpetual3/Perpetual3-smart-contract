@@ -1,5 +1,7 @@
 # Perpetual3 Smart Contract
 
+Please note that this is a BETA version of Perpetual3 smart contract and documentations.
+
 Full high level documentations: https://perpetualweb3.gitbook.io
 
 # def claimPerpetual():
